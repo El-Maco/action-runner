@@ -9,8 +9,8 @@ services:
         - REPO_URL=${REPO_URL}
         - RUNNER_TOKEN=${RUNNER_TOKEN}
         - NAME=${NAME}
-    volumes:
-      - ./runner_work:/home/runner/_work
+    # volumes:
+    #   - ./runner_work:/home/runner/_work
 
 volumes:
   runner_work:
