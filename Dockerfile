@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ubuntu:20.04
+ARG BASE_IMAGE=ubuntu:22.04
 FROM ${BASE_IMAGE}
 
 ARG arch=x64
@@ -7,19 +7,27 @@ ARG REPO_URL
 ARG RUNNER_TOKEN
 ARG NAME
 
-ENV REPO_URL ${REPO_URL}
-ENV RUNNER_TOKEN ${RUNNER_TOKEN}
-ENV NAME ${NAME}
+ARG ENV_FILE
+
+ENV REPO_URL=${REPO_URL}
+ENV RUNNER_TOKEN=${RUNNER_TOKEN}
+ENV NAME=${NAME}
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN dpkg --add-architecture i386
+
+RUN apt-get update
+RUN apt-get install -y \
     curl \
     jq \
     git \
     libicu-dev \
     sudo \
     make \
+    build-essential \
+    gcc-multilib \
+    libc6-dev-i386 \
     && apt-get clean
 
 RUN useradd runner && echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
@@ -32,12 +40,19 @@ RUN curl -o actions-runner-linux.tar.gz -L https://github.com/actions/runner/rel
 
 RUN sudo bash ./bin/installdependencies.sh
 
-RUN ./config.sh --url ${REPO_URL} --token ${RUNNER_TOKEN} --name ${NAME} --unattended --replace
+COPY ${ENV_FILE} /tmp/envfile
+RUN export $(grep -v "^#" /tmp/envfile | xargs) && \
+    ./config.sh --url ${REPO_URL} --token ${RUNNER_TOKEN} --name ${NAME} --unattended --replace && \
+    sudo rm -f /tmp/envfile
 
 # Copy the id_rsa to the repo root
 COPY .id_rsa /home/runner/.ssh/id_rsa
 COPY .known_hosts /home/runner/.ssh/known_hosts
 RUN sudo chown runner:runner .ssh/id_rsa && sudo chown runner:runner .ssh/known_hosts
+
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+    ~/.cargo/bin/rustup target add i686-unknown-linux-gnu
 
 COPY entrypoint.sh .
 

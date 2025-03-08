@@ -1,4 +1,4 @@
-runner.env
+*.env
 runner_work
 .id_rsa
 .known_hosts
