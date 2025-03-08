@@ -1,8 +1,11 @@
 services:
   runner:
-    container_name: ${NAME}
+    # For custom setup assign CONTAINER_NAME and ENV_FILE in .env
+    container_name: ${CONTAINER_NAME:-budu-runner}
     network_mode: host
     build:
       context: .
       args:
-        - ENV_FILE=runner.env
+        - ENV_FILE=${ENV_FILE:-runner.env}
+    environment:
+      - ENV_FILE=${ENV_FILE:-runner.env}

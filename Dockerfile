@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=ubuntu:22.04
-FROM ${BASE_IMAGE}
+FROM ${BASE_IMAGE} AS base
 
 ARG arch=x64
 
@@ -22,15 +22,20 @@ RUN apt-get install -y \
     libc6-dev-i386 \
     && apt-get clean
 
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+    ~/.cargo/bin/rustup target add i686-unknown-linux-gnu
+
 RUN useradd runner && echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER runner
 WORKDIR /home/runner
-RUN curl -o actions-runner-linux.tar.gz -L https://github.com/actions/runner/releases/download/v2.321.0/actions-runner-linux-$arch-2.321.0.tar.gz \
+RUN curl -o actions-runner-linux.tar.gz -L https://github.com/actions/runner/releases/download/v2.322.0/actions-runner-linux-$arch-2.322.0.tar.gz \
     && tar xzf actions-runner-linux.tar.gz \
     && rm ./actions-runner-linux.tar.gz
 
 RUN sudo bash ./bin/installdependencies.sh
+
+FROM base AS final
 
 COPY ${ENV_FILE} /tmp/envfile
 RUN export $(grep -v "^#" /tmp/envfile | xargs) && \
@@ -41,10 +46,6 @@ RUN export $(grep -v "^#" /tmp/envfile | xargs) && \
 COPY .id_rsa /home/runner/.ssh/id_rsa
 COPY .known_hosts /home/runner/.ssh/known_hosts
 RUN sudo chown runner:runner .ssh/id_rsa && sudo chown runner:runner .ssh/known_hosts
-
-
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
-    ~/.cargo/bin/rustup target add i686-unknown-linux-gnu
 
 COPY entrypoint.sh .
 
