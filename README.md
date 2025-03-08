@@ -1,13 +1,18 @@
-
-## Running
-Setup the env variables in `runner.env`.
-
-Run
+## First run
+Set the `runner.env` variables
 ```bash
-export $(cat runner.env | xargs)
+REPO_URL=
+RUNNER_TOKEN=
+NAME= #Optional
 ```
 
-Run
+And then run
 ```bash
 docker compose up -d
+```
+should do everything
+
+## Rebuild
+```bash
+docker compose build --no-cache
 ```
