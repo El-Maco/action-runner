@@ -1,15 +1,8 @@
 services:
   runner:
-    container_name: ${CONTAINER_NAME}
+    container_name: ${NAME}
     network_mode: host
     build:
       context: .
       args:
-        - REPO_URL=${REPO_URL}
-        - RUNNER_TOKEN=${RUNNER_TOKEN}
-        - NAME=${NAME}
-    # volumes:
-    #   - ./runner_work:/home/runner/_work
-
-        # volumes:
-        #   runner_work:
+        - ENV_FILE=runner.env
